@@ -5,7 +5,7 @@ on:
     tags: ['v.1.0']       # Trigger Deploy on tags like v1.0
   pull_request:
     branches: ['main'] # Trigger Test on Pull Requests
-
+  workflow_dispatch:        # <--- THIS ADDS THE BUTTON
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
