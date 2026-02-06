@@ -2,16 +2,16 @@ name: API Center Pipeline
 
 on:
   push:
-    tags: ['v.1.0']       # Trigger Deploy on tags like v1.0
+    tags: ['v*']       # FIXED: Accepts v1.0, v2.0, etc. (removed the dot typo)
   pull_request:
-    branches: ['main'] # Trigger Test on Pull Requests
-  workflow_dispatch:        # <--- THIS ADDS THE BUTTON
+    branches: ['main']
+  workflow_dispatch:   # Manual Button
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # JOB 1: RUN JEST TESTS
   test:
     runs-on: ubuntu-latest
     steps:
@@ -23,10 +23,10 @@ jobs:
       - name: Run Jest
         run: npm test
 
-  # JOB 2: BUILD & DEPLOY (Only on Tags)
   deploy:
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
+    # FIXED: Runs if it is a Tag OR if you clicked the Manual Button
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -35,20 +35,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # Login to GitHub Container Registry
       - uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build & Push Docker Image
       - uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
 
-      # Trigger Render Deployment
       - name: Deploy to Render
         run: curl "${{ secrets.RENDER_DEPLOY_HOOK }}&imgURL=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
