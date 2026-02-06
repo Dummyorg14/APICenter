@@ -2,7 +2,7 @@ name: API Center Pipeline
 
 on:
   push:
-    tags: ['v*']       # Trigger Deploy on tags like v1.0
+    tags: ['v.1.0']       # Trigger Deploy on tags like v1.0
   pull_request:
     branches: ['main'] # Trigger Test on Pull Requests
 
